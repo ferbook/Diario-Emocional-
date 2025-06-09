@@ -1,232 +1,212 @@
-!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <meta name="description" content="Aplicación para registrar y visualizar datos de salud y bienestar"/>
-  <title>Mi Diario Integral</title>
+  <title>Guía: Lomitos del Alma</title>
   <style>
     :root {
-      --bg: #f4f4f4; --fg: #333;
-      --sec-bg: #fff;
-      --btn-bg: #4caf50;
-      --shadow: rgba(0,0,0,0.1);
+      --beige: #f7f2ec;
+      --dorado: #c2a469;
+      --marron: #5a4437;
+      --blanco: #ffffff;
+      --gris-suave: #eeeae4;
+      --sombra: rgba(0, 0, 0, 0.05);
     }
-    [data-theme="dark"] {
-      --bg: #1e1e1e; --fg: #ccc;
-      --sec-bg: #2e2e2e; --btn-bg: #81c784;
-    }
-    * { box-sizing: border-box; }
+
     body {
-      font-family: Arial, sans-serif;
-      background-color: var(--bg);
-      color: var(--fg);
-      margin: 0; padding: 0;
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: var(--beige);
+      color: var(--marron);
+      line-height: 1.6;
     }
-    header, footer {
-      background-color: var(--sec-bg);
+
+    header {
+      background: var(--dorado);
+      color: var(--blanco);
       text-align: center;
-      padding: 1rem;
-      box-shadow: 0 2px 4px var(--shadow);
+      padding: 2rem 1rem;
+      box-shadow: 0 2px 6px var(--sombra);
     }
-    main {
-      max-width: 800px;
-      margin: auto;
-      padding: 1rem;
+
+    header h1 {
+      margin: 0;
+      font-size: 2rem;
     }
-    h1, h2, h3 { color: var(--fg); margin: .5em 0; }
-    section { background: var(--sec-bg); padding: 1em; margin-bottom: 1em; border-radius: 8px; box-shadow: 0 1px 3px var(--shadow); }
-    button {
-      padding: .5rem 1rem;
-      margin: .3rem .2rem;
-      border: none;
-      color: #fff;
-      background-color: var(--btn-bg);
-      border-radius: 6px;
+
+    .tabs {
+      display: flex;
+      justify-content: center;
+      background: var(--gris-suave);
+      flex-wrap: wrap;
+      padding: 0.5rem;
+    }
+
+    .tab-button {
+      padding: 0.7rem 1.5rem;
+      margin: 0.3rem;
+      background: var(--blanco);
+      border: 2px solid var(--dorado);
+      border-radius: 30px;
+      color: var(--marron);
       cursor: pointer;
-      transition: opacity .2s;
+      font-weight: bold;
+      transition: background 0.3s;
     }
-    button:hover { opacity: .8; }
-    textarea, input[type="text"], input[type="number"], input[type="date"] {
+
+    .tab-button.active {
+      background: var(--dorado);
+      color: var(--blanco);
+    }
+
+    .content {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 1.5rem;
+      background: var(--blanco);
+      border-radius: 15px;
+      box-shadow: 0 2px 10px var(--sombra);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+      animation: fade 0.5s ease-in;
+    }
+
+    @keyframes fade {
+      from {opacity: 0;}
+      to {opacity: 1;}
+    }
+
+    .footer {
+      text-align: center;
+      padding: 2rem 1rem;
+      font-size: 0.9rem;
+      color: var(--marron);
+      background: var(--gris-suave);
+      margin-top: 3rem;
+    }
+
+    .logo-marcas {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      margin-top: 1rem;
+    }
+
+    .marca {
+      font-weight: bold;
+      color: var(--dorado);
+    }
+
+    textarea {
       width: 100%;
-      padding: .5rem;
-      margin-top: .5rem;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 1rem;
+      height: 200px;
+      padding: 1rem;
+      border: 2px solid var(--dorado);
+      border-radius: 10px;
+      font-family: inherit;
+      margin-top: 1rem;
+      resize: vertical;
     }
-    canvas { max-width: 100%; margin-top: 1em; }
-    ul { padding-left: 1.2em; }
-    li { margin-bottom: .5em; }
-    /* Emociones */
-    .feliz { background: #4caf50; }
-    .triste { background: #2196f3; }
-    .enojado { background: #f44336; }
-    .ansioso { background: #ff9800; }
-    .calmado { background: #009688; }
-    .agradecido { background: #e91e63; }
+
+    @media (max-width: 600px) {
+      .tab-button {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+      }
+
+      .content {
+        padding: 1rem;
+      }
+    }
   </style>
 </head>
 <body>
   <header>
-    <h1>Mi Diario Integral</h1>
-    <p>Edición 01 – Primavera 2025</p>
-    <button onclick="toggleTheme()">🌙 Modo oscuro</button>
+    <h1>Guía Digital – Lomitos del Alma</h1>
+    <p>Cómo los perros ayudan a sanar la ansiedad 🐾</p>
   </header>
-  <main>
-    <!-- Registro general -->
-    <section><h2>Registrar Nota</h2><textarea id="nota" rows="3" placeholder="Hoy me sentí..."></textarea><button onclick="guardar('nota')">Guardar</button></section>
-    <section><h2>Registrar Comida</h2><input type="text" id="comida" placeholder="¿Qué comiste?"><input type="number" id="horasComida" placeholder="Cantidad o porción"><button onclick="guardar('comida')">Guardar</button></section>
-    <section><h2>Registrar Sueño</h2><input type="number" id="horasSueno" placeholder="Horas dormidas"><button onclick="guardar('sueno')">Guardar</button></section>
-    <section><h2>Registrar Emoción</h2>
-      <button class="feliz" onclick="guardar('emocion','😊 Feliz')">😊 Feliz</button>
-      <button class="triste" onclick="guardar('emocion','😔 Triste')">😔 Triste</button>
-      <button class="enojado" onclick="guardar('emocion','😠 Enojado')">😠 Enojado</button>
-      <button class="ansioso" onclick="guardar('emocion','😨 Ansioso')">😨 Ansioso</button>
-      <button class="calmado" onclick="guardar('emocion','😌 Calmado')">😌 Calmado</button>
-      <button class="agradecido" onclick="guardar('emocion','❤️ Agradecido')">❤️ Agradecido</button>
-    </section>
-    <section><h2>Acciones Generales</h2>
-      <button onclick="verGraficas()">Ver Gráficas</button>
-      <button onclick="mostrarResumen()">Resumen Semanal</button>
-      <input type="date" id="fechaFiltro"><button onclick="filtrar()">Filtrar</button>
-      <button onclick="exportPDF(true)">Exportar Semanal PDF</button>
-      <button onclick="exportPDF(false)">Exportar Todo PDF</button>
-      <button onclick="exportBackup()">Exportar Backup</button>
-      <button onclick="importBackup()">Importar Backup</button>
-    </section>
 
-    <section id="graficas" style="display:none;"><h2>Gráficas</h2>
-      <canvas id="grafSueno"></canvas>
-      <canvas id="grafComida"></canvas>
-      <canvas id="grafEmocion"></canvas>
-    </section>
+  <div class="tabs">
+    <button class="tab-button active" onclick="showTab('intro')">Inicio</button>
+    <button class="tab-button" onclick="showTab('cap1')">Capítulo 1</button>
+    <button class="tab-button" onclick="showTab('cap2')">Capítulo 2</button>
+    <button class="tab-button" onclick="showTab('cap3')">Capítulo 3</button>
+    <button class="tab-button" onclick="showTab('notas')">Notas</button>
+    <button class="tab-button" onclick="showTab('gracias')">Gracias</button>
+  </div>
 
-    <section id="resumen" style="display:none;"><h2>Resumen</h2>
-      <div><h3>Notas:</h3><ul id="listNota"></ul></div>
-      <div><h3>Comidas:</h3><ul id="listComida"></ul></div>
-      <div><h3>Sueños:</h3><ul id="listSueno"></ul></div>
-      <div><h3>Emociones:</h3><ul id="listEmocion"></ul></div>
-    </section>
-  </main>
-  <footer><p>Hecho con ❤️ por Susurros del Corazón</p></footer>
+  <div class="content">
+    <div id="intro" class="tab-content active">
+      <h2>Bienvenido a esta guía</h2>
+      <p>
+        Esta guía está hecha con el corazón. En cada página descubrirás cómo esos pequeños seres de cuatro patas pueden convertirse en grandes terapeutas del alma. 
+        Si estás pasando por momentos de ansiedad, soledad o tristeza, un lomito puede ayudarte más de lo que imaginas.
+      </p>
+    </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <div id="cap1" class="tab-content">
+      <h2>Capítulo 1 – Presencia Sanadora</h2>
+      <p>
+        Los lomitos no juzgan, no interrumpen, no critican. Solo están. Esa presencia constante, amorosa y silenciosa tiene un efecto calmante inmediato para quien vive con ansiedad.
+        Su sola respiración acompaña la nuestra. Su silencio nos contiene. Su mirada nos abraza.
+      </p>
+    </div>
+
+    <div id="cap2" class="tab-content">
+      <h2>Capítulo 2 – Movimiento y Rutina</h2>
+      <p>
+        La ansiedad muchas veces nos paraliza o desordena nuestros días. Un lomito nos invita (y obliga) a levantarnos, salir a caminar, cumplir horarios, brindar cuidado.
+        Esa estructura puede ayudarnos a reconstruir poco a poco una rutina que nos devuelva el equilibrio emocional.
+      </p>
+    </div>
+
+    <div id="cap3" class="tab-content">
+      <h2>Capítulo 3 – Amor Incondicional</h2>
+      <p>
+        Cuando sentimos ansiedad o depresión, a menudo creemos que no somos suficientes, que nadie nos comprende. Un lomito no necesita palabras.
+        Te ama como eres, estés como estés. Y ese amor sin condiciones es un bálsamo directo al alma.
+      </p>
+    </div>
+
+    <div id="notas" class="tab-content">
+      <h2>Notas Personales</h2>
+      <p>Usa este espacio para escribir tus emociones, reflexiones o lo que tu corazón necesite liberar en este momento.</p>
+      <textarea placeholder="Aquí puedes escribir lo que sientes..."></textarea>
+    </div>
+
+    <div id="gracias" class="tab-content">
+      <h2>Gracias por estar aquí</h2>
+      <p>
+        Gracias por permitirte abrir esta guía. Gracias por amar a los lomitos. Gracias por seguir buscando sanar. Esta guía es solo una chispa.
+        Lo más importante está en tu corazón… y en esas patitas que caminan a tu lado.
+      </p>
+      <div class="logo-marcas">
+        <span class="marca">📘 Diario de un Lomito</span>
+        <span class="marca">💛 Susurros del Corazón</span>
+      </div>
+      <p style="margin-top:1rem;">Edición 01 • Todos los derechos reservados</p>
+    </div>
+  </div>
+
+  <div class="footer">
+    &copy; 2025 Diario de un Lomito y Susurros del Corazón. Esta guía no reemplaza el acompañamiento profesional. Si estás atravesando una crisis, por favor busca ayuda especializada.
+  </div>
+
   <script>
-    const data = {
-      nota: JSON.parse(localStorage.getItem('nota')||'[]'),
-      comida: JSON.parse(localStorage.getItem('comida')||'[]'),
-      sueno: JSON.parse(localStorage.getItem('sueno')||'[]'),
-      emocion: JSON.parse(localStorage.getItem('emocion')||'[]')
-    };
+    function showTab(id) {
+      document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
 
-    function guardar(tipo, valor=null) {
-      let text=valor;
-      if(!text){
-        if(tipo==='nota') text = document.getElementById(tipo).value.trim();
-        if(tipo==='comida') text = document.getElementById(tipo).value.trim() + ' ('+document.getElementById('horasComida').value+' porción)'; 
-        if(tipo==='sueno') text = document.getElementById('horasSueno').value + ' hrs';
-      }
-      if(!text) return alert('Complete el campo.');
-      const item={texto:text, fecha:new Date().toISOString()};
-      data[tipo].push(item);
-      localStorage.setItem(tipo, JSON.stringify(data[tipo]));
-      alert(tipo.charAt(0).toUpperCase() + ' guardado.');
-      if(tipo==='nota') document.getElementById('nota').value='';
-      if(tipo==='comida'){ document.getElementById('comida').value=''; document.getElementById('horasComida').value=''; }
-      if(tipo==='sueno') document.getElementById('horasSueno').value='';
+      document.querySelector(`.tab-button[onclick="showTab('${id}')"]`).classList.add('active');
+      document.getElementById(id).classList.add('active');
     }
-
-    function verGraficas(){
-      document.getElementById('graficas').style.display='block';
-      const fechas = Object.values(data).flat().map(it=>it.fecha);
-      const sorted = [...new Set(fechas)].sort();
-      const su = [], co = [], emo = [];
-      sorted.forEach(d=>{
-        su.push(data.sueno.filter(i=>i.fecha.slice(0,10)===d).length? Number(data.sueno.filter(i=>i.fecha.slice(0,10)===d)[0].texto) : 0);
-        co.push(data.comida.filter(i=>i.fecha.slice(0,10)===d).length);
-        emo.push(data.emocion.filter(i=>i.fecha.slice(0,10)===d).length);
-      });
-      new Chart(document.getElementById('grafSueno'), { type:'line', data:{ labels:sorted, datasets:[{label:'Sueño (hrs)', data:su, borderColor:'#2196f3'}]}});
-      new Chart(document.getElementById('grafComida'), { type:'bar', data:{ labels:sorted, datasets:[{label:'Comidas', data:co, backgroundColor:'#4caf50'}]}});
-      new Chart(document.getElementById('grafEmocion'), { type:'bar', data:{ labels:sorted, datasets:[{label:'Emociones', data:emo, backgroundColor:'#9c27b0'}]}});
-    }
-
-    function mostrarResumen(){
-      document.getElementById('resumen').style.display='block';
-      ['nota','comida','sueno','emocion'].forEach(t=>{
-        const arr = data[t].filter(i=> (new Date()-new Date(i.fecha))<=7*864e5);
-        document.getElementById('list'+t.charAt(0).toUpperCase()+t.slice(1)).innerHTML = arr.map(i=>`<li>${i.texto} (${new Date(i.fecha).toLocaleDateString()})</li>`).join('');
-      });
-    }
-
-    function filtrar(){
-      const fd=document.getElementById('fechaFiltro').value;
-      if(!fd) return alert('Selecciona fecha.');
-      ['nota','comida','sueno','emocion'].forEach(t=>{
-        const arr=data[t].filter(i=> i.fecha.slice(0,10)===fd);
-        document.getElementById('list'+t.charAt(0).toUpperCase()+t.slice(1)).innerHTML=arr.map(i=>`<li>${i.texto}</li>`).join('');
-        document.getElementById('resumen').style.display='block';
-      });
-    }
-
-    function exportPDF(semanal){
-      const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF();
-      pdf.setFontSize(18); pdf.text("Mi Diario Integral",20,20);
-      pdf.setFontSize(12); pdf.text("Exportado: "+new Date().toLocaleString(),20,30);
-      let y=40;
-      ['nota','comida','sueno','emocion'].forEach(t=>{
-        pdf.setFontSize(14); pdf.text(t.charAt(0).toUpperCase()+t.slice(1),20,y); y+=6;
-        const arr = data[t].filter(i=> !semanal || (new Date()-new Date(i.fecha))<=7*864e5);
-        arr.forEach((i,idx)=>{
-          pdf.setFontSize(11);
-          pdf.text(`- ${i.texto}`,25,y); y+=6;
-          if(y>270){ pdf.addPage(); y=20; }
-        });
-        y+=6;
-      });
-      pdf.save(semanal?'resumen_semanal.pdf':'resumen_completo.pdf');
-    }
-
-    function exportBackup(){
-      const blob = new Blob([JSON.stringify(data)],{type:'application/json'});
-      const a=document.createElement('a');
-      a.href=URL.createObjectURL(blob);
-      a.download="diario_backup.json";
-      a.click();
-    }
-
-    function importBackup(){
-      const input=document.createElement('input');
-      input.type='file'; input.accept='application/json';
-      input.onchange=e=>{
-        const reader=new FileReader();
-        reader.onload=ev=>{
-          const obj=JSON.parse(ev.target.result);
-          ['nota','comida','sueno','emocion'].forEach(t=>{
-            data[t]=obj[t]||[]; localStorage.setItem(t,JSON.stringify(data[t]));
-          });
-          alert("Datos restaurados."); location.reload();
-        };
-        reader.readAsText(e.target.files[0]);
-      };
-      input.click();
-    }
-
-    function toggleTheme(){
-      const d=document.documentElement;
-      d.setAttribute('data-theme', d.getAttribute('data-theme')==='dark'?'light':'dark');
-    }
-
-    // Aplica tema guardado
-    if(localStorage.getItem('theme')==='dark') document.documentElement.setAttribute('data-theme','dark');
-    document.querySelector("button[onclick='toggleTheme()']").addEventListener('click',()=>{
-      const d=document.documentElement;
-      const next = d.getAttribute('data-theme')==='dark'?'light':'dark';
-      localStorage.setItem('theme', next);
-    });
   </script>
 </body>
 </html>
