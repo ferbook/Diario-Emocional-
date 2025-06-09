@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="Aplicación para registrar y visualizar datos de salud y bienestar"/>
+  <title>Mi Diario Integral</title>
+  <style>
+    :root {
+      --bg: #f4f4f4; --fg: #333;
+      --sec-bg: #fff;
+      --btn-bg: #4caf50;
+      --shadow: rgba(0,0,0,0.1);
+    }
+    [data-theme="dark"] {
+      --bg: #1e1e1e; --fg: #ccc;
+      --sec-bg: #2e2e2e; --btn-bg: #81c784;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--fg);
+      margin: 0; padding: 0;
+    }
+    header, footer {
+      background-color: var(--sec-bg);
+      text-align: center;
+      padding: 1rem;
+      box-shadow: 0 2px 4px var(--shadow);
+    }
+    main {
+      max-width: 800px;
+      margin: auto;
+      padding: 1rem;
+    }
+    h1, h2, h3 { color: var(--fg); margin: .5em 0; }
+    section { background: var(--sec-bg); padding: 1em; margin-bottom: 1em; border-radius: 8px; box-shadow: 0 1px 3px var(--shadow); }
+    button {
+      padding: .5rem 1rem;
+      margin: .3rem .2rem;
+      border: none;
+      color: #fff;
+      background-color: var(--btn-bg);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: opacity .2s;
+    }
+    button:hover { opacity: .8; }
+    textarea, input[type="text"], input[type="number"], input[type="date"] {
+      width: 100%;
+      padding: .5rem;
+      margin-top: .5rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+    canvas { max-width: 100%; margin-top: 1em; }
+    ul { padding-left: 1.2em; }
+    li { margin-bottom: .5em; }
+    /* Emociones */
+    .feliz { background: #4caf50; }
+    .triste { background: #2196f3; }
+    .enojado { background: #f44336; }
+    .ansioso { background: #ff9800; }
+    .calmado { background: #009688; }
+    .agradecido { background: #e91e63; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Mi Diario Integral</h1>
+    <p>Edición 01 – Primavera 2025</p>
+    <button onclick="toggleTheme()">🌙 Modo oscuro</button>
+  </header>
+  <main>
+    <!-- Registro general -->
+    <section><h2>Registrar Nota</h2><textarea id="nota" rows="3" placeholder="Hoy me sentí..."></textarea><button onclick="guardar('nota')">Guardar</button></section>
+    <section><h2>Registrar Comida</h2><input type="text" id="comida" placeholder="¿Qué comiste?"><input type="number" id="horasComida" placeholder="Cantidad o porción"><button onclick="guardar('comida')">Guardar</button></section>
+    <section><h2>Registrar Sueño</h2><input type="number" id="horasSueno" placeholder="Horas dormidas"><button onclick="guardar('sueno')">Guardar</button></section>
+    <section><h2>Registrar Emoción</h2>
+      <button class="feliz" onclick="guardar('emocion','😊 Feliz')">😊 Feliz</button>
+      <button class="triste" onclick="guardar('emocion','😔 Triste')">😔 Triste</button>
+      <button class="enojado" onclick="guardar('emocion','😠 Enojado')">😠 Enojado</button>
+      <button class="ansioso" onclick="guardar('emocion','😨 Ansioso')">😨 Ansioso</button>
+      <button class="calmado" onclick="guardar('emocion','😌 Calmado')">😌 Calmado</button>
+      <button class="agradecido" onclick="guardar('emocion','❤️ Agradecido')">❤️ Agradecido</button>
+    </section>
+    <section><h2>Acciones Generales</h2>
+      <button onclick="verGraficas()">Ver Gráficas</button>
+      <button onclick="mostrarResumen()">Resumen Semanal</button>
+      <input type="date" id="fechaFiltro"><button onclick="filtrar()">Filtrar</button>
+      <button onclick="exportPDF(true)">Exportar Semanal PDF</button>
+      <button onclick="exportPDF(false)">Exportar Todo PDF</button>
+      <button onclick="exportBackup()">Exportar Backup</button>
+      <button onclick="importBackup()">Importar Backup</button>
+    </section>
+
+    <section id="graficas" style="display:none;"><h2>Gráficas</h2>
+      <canvas id="grafSueno"></canvas>
+      <canvas id="grafComida"></canvas>
+      <canvas id="grafEmocion"></canvas>
+    </section>
+
+    <section id="resumen" style="display:none;"><h2>Resumen</h2>
+      <div><h3>Notas:</h3><ul id="listNota"></ul></div>
+      <div><h3>Comidas:</h3><ul id="listComida"></ul></div>
+      <div><h3>Sueños:</h3><ul id="listSueno"></ul></div>
+      <div><h3>Emociones:</h3><ul id="listEmocion"></ul></div>
+    </section>
+  </main>
+  <footer><p>Hecho con ❤️ por Susurros del Corazón</p></footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script>
+    const data = {
+      nota: JSON.parse(localStorage.getItem('nota')||'[]'),
+      comida: JSON.parse(localStorage.getItem('comida')||'[]'),
+      sueno: JSON.parse(localStorage.getItem('sueno')||'[]'),
+      emocion: JSON.parse(localStorage.getItem('emocion')||'[]')
+    };
+
+    function guardar(tipo, valor=null) {
+      let text=valor;
+      if(!text){
+        if(tipo==='nota') text = document.getElementById(tipo).value.trim();
+        if(tipo==='comida') text = document.getElementById(tipo).value.trim() + ' ('+document.getElementById('horasComida').value+' porción)'; 
+        if(tipo==='sueno') text = document.getElementById('horasSueno').value + ' hrs';
+      }
+      if(!text) return alert('Complete el campo.');
+      const item={texto:text, fecha:new Date().toISOString()};
+      data[tipo].push(item);
+      localStorage.setItem(tipo, JSON.stringify(data[tipo]));
+      alert(tipo.charAt(0).toUpperCase() + ' guardado.');
+      if(tipo==='nota') document.getElementById('nota').value='';
+      if(tipo==='comida'){ document.getElementById('comida').value=''; document.getElementById('horasComida').value=''; }
+      if(tipo==='sueno') document.getElementById('horasSueno').value='';
+    }
+
+    function verGraficas(){
+      document.getElementById('graficas').style.display='block';
+      const fechas = Object.values(data).flat().map(it=>it.fecha);
+      const sorted = [...new Set(fechas)].sort();
+      const su = [], co = [], emo = [];
+      sorted.forEach(d=>{
+        su.push(data.sueno.filter(i=>i.fecha.slice(0,10)===d).length? Number(data.sueno.filter(i=>i.fecha.slice(0,10)===d)[0].texto) : 0);
+        co.push(data.comida.filter(i=>i.fecha.slice(0,10)===d).length);
+        emo.push(data.emocion.filter(i=>i.fecha.slice(0,10)===d).length);
+      });
+      new Chart(document.getElementById('grafSueno'), { type:'line', data:{ labels:sorted, datasets:[{label:'Sueño (hrs)', data:su, borderColor:'#2196f3'}]}});
+      new Chart(document.getElementById('grafComida'), { type:'bar', data:{ labels:sorted, datasets:[{label:'Comidas', data:co, backgroundColor:'#4caf50'}]}});
+      new Chart(document.getElementById('grafEmocion'), { type:'bar', data:{ labels:sorted, datasets:[{label:'Emociones', data:emo, backgroundColor:'#9c27b0'}]}});
+    }
+
+    function mostrarResumen(){
+      document.getElementById('resumen').style.display='block';
+      ['nota','comida','sueno','emocion'].forEach(t=>{
+        const arr = data[t].filter(i=> (new Date()-new Date(i.fecha))<=7*864e5);
+        document.getElementById('list'+t.charAt(0).toUpperCase()+t.slice(1)).innerHTML = arr.map(i=>`<li>${i.texto} (${new Date(i.fecha).toLocaleDateString()})</li>`).join('');
+      });
+    }
+
+    function filtrar(){
+      const fd=document.getElementById('fechaFiltro').value;
+      if(!fd) return alert('Selecciona fecha.');
+      ['nota','comida','sueno','emocion'].forEach(t=>{
+        const arr=data[t].filter(i=> i.fecha.slice(0,10)===fd);
+        document.getElementById('list'+t.charAt(0).toUpperCase()+t.slice(1)).innerHTML=arr.map(i=>`<li>${i.texto}</li>`).join('');
+        document.getElementById('resumen').style.display='block';
+      });
+    }
+
+    function exportPDF(semanal){
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF();
+      pdf.setFontSize(18); pdf.text("Mi Diario Integral",20,20);
+      pdf.setFontSize(12); pdf.text("Exportado: "+new Date().toLocaleString(),20,30);
+      let y=40;
+      ['nota','comida','sueno','emocion'].forEach(t=>{
+        pdf.setFontSize(14); pdf.text(t.charAt(0).toUpperCase()+t.slice(1),20,y); y+=6;
+        const arr = data[t].filter(i=> !semanal || (new Date()-new Date(i.fecha))<=7*864e5);
+        arr.forEach((i,idx)=>{
+          pdf.setFontSize(11);
+          pdf.text(`- ${i.texto}`,25,y); y+=6;
+          if(y>270){ pdf.addPage(); y=20; }
+        });
+        y+=6;
+      });
+      pdf.save(semanal?'resumen_semanal.pdf':'resumen_completo.pdf');
+    }
+
+    function exportBackup(){
+      const blob = new Blob([JSON.stringify(data)],{type:'application/json'});
+      const a=document.createElement('a');
+      a.href=URL.createObjectURL(blob);
+      a.download="diario_backup.json";
+      a.click();
+    }
+
+    function importBackup(){
+      const input=document.createElement('input');
+      input.type='file'; input.accept='application/json';
+      input.onchange=e=>{
+        const reader=new FileReader();
+        reader.onload=ev=>{
+          const obj=JSON.parse(ev.target.result);
+          ['nota','comida','sueno','emocion'].forEach(t=>{
+            data[t]=obj[t]||[]; localStorage.setItem(t,JSON.stringify(data[t]));
+          });
+          alert("Datos restaurados."); location.reload();
+        };
+        reader.readAsText(e.target.files[0]);
+      };
+      input.click();
+    }
+
+    function toggleTheme(){
+      const d=document.documentElement;
+      d.setAttribute('data-theme', d.getAttribute('data-theme')==='dark'?'light':'dark');
+    }
+
+    // Aplica tema guardado
+    if(localStorage.getItem('theme')==='dark') document.documentElement.setAttribute('data-theme','dark');
+    document.querySelector("button[onclick='toggleTheme()']").addEventListener('click',()=>{
+      const d=document.documentElement;
+      const next = d.getAttribute('data-theme')==='dark'?'light':'dark';
+      localStorage.setItem('theme', next);
+    });
+  </script>
+</body>
+</html>
